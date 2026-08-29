@@ -214,11 +214,16 @@ This is not a thin wrapper or a fake typing animation. TrueForge is doing real h
 
 ## Qodo Code Review Evidence
 
-- **PR**: [Insert link to hackathon feature PR]
-- **What Qodo found**: [Real Qodo finding]
-- **What we did**: [Fix or dismissal with reasoning]
-- **Follow-up review**: [Link to post-fix review]
-
+- **PR**: https://github.com/CodeWithMehru/Verdict/pull/1
+- **What Qodo found**: 4 correctness/maintainability issues — incorrect `agent/` path prefixes
+  throughout setup instructions, a missing Triage clone step, the MCP server being built but
+  never started, and a README claim that overstated which tools use Supabase.
+- **What we did**: Fixed all 4 in a follow-up commit on the same PR — corrected all paths, added
+  the clone step, added the `npm run start` step, and narrowed the Supabase claim to only the
+  implemented Tier 1 tools.
+- **Follow-up review**: Same PR — Qodo re-reviewed the second commit and marked all 4 findings
+  "Resolved" with 0 remaining bugs.
+  
 ## Judging Criteria Mapping
 
 | Criteria | How Verdict Hits It |
@@ -230,18 +235,6 @@ This is not a thin wrapper or a fake typing animation. TrueForge is doing real h
 | **Control & Safety** | Zero unapproved destructive actions. `ban_ip` and `flag_leak` are gated at the harness level, not just in the system prompt. |
 | **Presentation** | Clean, dark-mode engineering console — three always-visible panels, judge understands the workflow within 10 seconds. |
 
-## Qodo Code Review Evidence
-
-- **PR**: https://github.com/CodeWithMehru/Verdict/pull/1
-- **What Qodo found**: 4 correctness/maintainability issues — incorrect `agent/` path prefixes
-  throughout setup instructions, a missing Triage clone step, the MCP server being built but
-  never started, and a README claim that overstated which tools use Supabase.
-- **What we did**: Fixed all 4 in a follow-up commit on the same PR — corrected all paths, added
-  the clone step, added the `npm run start` step, and narrowed the Supabase claim to only the
-  implemented Tier 1 tools.
-- **Follow-up review**: Same PR — Qodo re-reviewed the second commit and marked all 4 findings
-  "Resolved" with 0 remaining bugs.
-  
 ## License
 
 MIT — see [LICENSE](LICENSE) for the full text.
