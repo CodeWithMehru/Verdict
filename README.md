@@ -85,7 +85,7 @@ These are the tools actually implemented and running in this submission:
 - **`get_honeypot_hits(ip)`** — Queries Triage's Supabase database for honeypot port-scan events for a given IP. Returns up to 100 most recent hits.
 - **`ban_ip(ip, reason)`** — Inserts an `AUTO_BAN` row into Triage's database. Triage middleware immediately begins returning 403 for that IP. **Requires explicit human approval** via TrueForge's checkpoint — the harness will not let this run automatically.
 - **`flag_leak(ip, pattern)`** — Inserts a `LEAK_FLAG` row for a detected secret/key leak. Also requires human approval.
-- **Sandbox execution** — The agent runs `agent/sandbox-scripts/correlate.py` inside TrueForge's Daytona sandbox at runtime to compute a deterministic confidence score (0–100) and chronological timeline. The model does not compute this score itself.
+- **Sandbox execution** — The agent runs `sandbox-scripts/correlate.py` inside TrueForge's Daytona sandbox at runtime to compute a deterministic confidence score (0–100) and chronological timeline. The model does not compute this score itself.
 - **Mandatory approval checkpoint** — Configured via `require_approval_for_tools: ["ban_ip", "flag_leak"]` in the agent spec. Cannot be bypassed by prompt manipulation.
 
 ### Future work (not implemented in this submission)
@@ -101,7 +101,7 @@ These are the tools actually implemented and running in this submission:
 | Database Client | Supabase JS | `@supabase/supabase-js ^2.49.0` |
 | Console UI | Next.js (App Router) | `next 16.2.11` |
 | UI Framework | React & Tailwind CSS | `react 19.2.4`, `tailwindcss ^4` |
-| Correlation Script | Python 3 | `agent/sandbox-scripts/correlate.py` |
+| Correlation Script | Python 3 | `sandbox-scripts/correlate.py` |
 | Sandboxing | TrueForge Sandbox | Daytona Code Mode |
 
 ## Setup & Run Instructions
@@ -113,13 +113,14 @@ Assuming a clean machine with Node.js 20+, Docker, and Python 3 installed.
 ```bash
 git clone https://github.com/CodeWithMehru/verdict
 cd verdict
+git clone https://github.com/CodeWithMehru/Triage.git
 ```
 
 Copy the example env file for the MCP server and fill in your real Supabase credentials:
 
 ```bash
-cp agent/mcp-server/.env.example agent/mcp-server/.env
-# Edit agent/mcp-server/.env and set:
+cp mcp-server/.env.example mcp-server/.env
+# Edit mcp-server/.env and set:
 #   SUPABASE_URL=...
 #   SUPABASE_SERVICE_ROLE_KEY=...
 ```
@@ -153,26 +154,32 @@ npm run dev
 ### 4. Build the MCP tool server (Terminal 3)
 
 ```bash
-cd agent/mcp-server
+cd mcp-server
 npm install
 npm run build
 ```
 
-### 5. Start TrueForge with your Groq key (Terminal 3, continued)
+### 5. Start the MCP tool server (Terminal 3, continued)
 
 ```bash
-cd ../..
+npm run start
+```
+
+### 6. Start TrueForge with your Groq key (Terminal 3, continued)
+
+```bash
+cd ..
 export GROQ_API_KEY="gsk_your_real_key_here"
 npx @truefoundry/trueforge
 # → Agent server listening on http://localhost:8790
 ```
 
-Load the agent spec via the TrueForge UI at `http://localhost:8790`, using the config in `agent/instructions/verdict-agent-spec.json`.
+Load the agent spec via the TrueForge UI at `http://localhost:8790`, using the config in `instructions/verdict-agent-spec.json`.
 
-### 6. Test the sandbox script standalone (optional)
+### 7. Test the sandbox script standalone (optional)
 
 ```bash
-cd agent/sandbox-scripts
+cd sandbox-scripts
 # Run built-in test fixtures (3 scenarios)
 python3 correlate.py --test
 
@@ -180,7 +187,7 @@ python3 correlate.py --test
 echo '{"ip":"10.0.0.1","threat_events":[],"honeypot_hits":[]}' | python3 correlate.py
 ```
 
-### 7. Trigger a test attack (optional)
+### 8. Trigger a test attack (optional)
 
 ```bash
 curl -X POST http://localhost:3001/api/search \
@@ -201,7 +208,7 @@ curl -X POST http://localhost:3001/api/search \
 
 This is not a thin wrapper or a fake typing animation. TrueForge is doing real heavy lifting:
 
-1. **Real MCP tool calls against a live database** — every tool call hits Triage's live Supabase instance; zero fixtures or mocks.
+1. **Real MCP tool calls against a live database** — the Tier 1 tools (`get_threat_events`, `get_honeypot_hits`) hit Triage's live Supabase instance directly; zero fixtures or mocks for what's implemented in this submission.
 2. **Real sandbox execution** — the correlation logic runs inside a Daytona-backed sandbox provisioned on demand (`config.sandbox.enabled: true`). The model cannot hallucinate the confidence score; it must come from the sandbox stdout.
 3. **Mandatory human approval** — `require_approval_for_tools: ["ban_ip", "flag_leak"]` is enforced at the harness level. The LLM execution is forcibly halted until a human clicks Approve in the Verdict Console. This cannot be bypassed by prompting.
 
